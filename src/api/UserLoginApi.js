@@ -6,10 +6,12 @@ class UserLoginApi extends Request {
     return this.post("/api/admin/login", payload);
   }
   
-  async checkLoginToken(payload) {
-    return this.post("/api/user/checkLoginToken", payload,{
-			token: payload.token,
-		});
+  async checkUserLogin(payload) {
+     const headers = {
+      loginId: payload.loginId,
+      token: payload.token,
+    };
+    return this.post("/api/admin/checkUserLogin", payload,headers);
   }
 
   async logout(payload) {

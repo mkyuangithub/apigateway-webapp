@@ -15,18 +15,13 @@ const route = useRoute();
 const router = useRouter();
 
 const intoMaster = () => {
-	if (route.name == "Master" || route.name == "Center") {
-		let query = route.query || {};
-		let params = route.params;
-		let channel = params.channel || "default";
-		router.replace({
-			name: "Center",
-			query: query,
-			params: {
-				channel
-			}
-		});
-	}
+  router.replace({
+    name: "Center",
+    query: route.query || {},
+    params: {
+      channel: route.params?.channel || "default"
+    }
+  });
 }
 const checkLoginInfo = async () => {
     try {
@@ -43,22 +38,22 @@ const checkLoginInfo = async () => {
             });
             return false;
         }
-        
-        let token = authorization.getToken();
-        let encryptedToken = encrypt_url(token);
+		let token=Authorization.getToken();
+		let loginId=Authorization.getLoginId();
         let payload = {
-            token: encryptedToken,
+			loginId: loginId,
+			token: token
         }
         
         // 使用 await 等待 Promise 结果
-        const res = await UserLoginApi.checkLoginToken(payload);
+        const res = await UserLoginApi.checkUserLogin(payload);
         console.log(">>>>>>after checkLoginToken the result is->", JSON.stringify(res));
         const finalResult = res;
         console.log("最终返回值：", finalResult);
         return finalResult;
     } catch (err) {
-        console.log(">>>>>>checkLoginInfo error->", err);
-        return false;
+        console.log(">>>>>>checkUserLogin error->", err);
+        return -1;
     }
 }
 
@@ -67,9 +62,9 @@ onMounted(async () => {
 	try {
 		const isLoggedIn = await checkLoginInfo();
 		console.log(">>>>>>isLoggedIn->"+isLoggedIn);
-		if (isLoggedIn) {
+		if (isLoggedIn===1) {
 			intoMaster();
-		}else{
+		}else if(isLoggedIn==0){
 			let channel = route.params.channel || 'default';
 			await router.replace({
 				name: 'Login',
@@ -78,6 +73,8 @@ onMounted(async () => {
 				}
 			});
 			return false;
+		}else{
+			console.error(">>>>>>inital to Master error->", err);
 		}
 	} catch (err) {
 		console.error(">>>>>>inital to Master error->", err);
