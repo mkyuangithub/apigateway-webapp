@@ -47,13 +47,13 @@ class Authorization {
 		}
 	}
 
-	getUserName() {
+	getLoginId() {
 		const text = this.get();
 		if (!text) return undefined
 		try {
 			const data = JSON.parse(text)
 			if (dayjs().isBefore(dayjs(data.expire))) {
-				return data.userName;
+				return data.loginId;
 			} else {
 				return undefined;
 			}

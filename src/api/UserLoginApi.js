@@ -14,10 +14,10 @@ class UserLoginApi extends Request {
 
   async logout(payload) {
     const headers = {
-      userName: payload.userName,
+      loginId: payload.loginId,
       token: payload.token,
     };
-    return this.post("/api/user/logout", payload, headers);
+    return this.post("/api/admin/logout", payload, headers);
   }
 
   /*

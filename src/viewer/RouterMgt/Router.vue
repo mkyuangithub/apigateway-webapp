@@ -1,5 +1,5 @@
 <template>
     <div>
-        欢迎使用Venus API Gateway
+        路由管理
     </div>
 </template>

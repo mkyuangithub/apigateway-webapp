@@ -101,7 +101,7 @@ const onLogin = () => {
         authorization.set(res);
         let encryptedToken = encrypt_url(res.ut);
         console.log(">>>>>>encryptedToken->" + encryptedToken);
-        //intoMaster();
+        intoMaster();
         //setLocale();
       }
       //console.log(">>>>>>login response->" + JSON.stringify(res));

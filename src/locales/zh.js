@@ -15,6 +15,8 @@ export default {
   homeMenu: {
     welcomeMsg: '欢迎',
     homePageText: '首页',
+    routerMgtTitleText: 'API路由管理',
+    routerConfigText: '路由设定',
     knowledgeRepoText: '企业知识库',
     knowledgeRepoManageText: '知识库',
     aiSettingText: 'AI模型管理与设定',

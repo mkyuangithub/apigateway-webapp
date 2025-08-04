@@ -1,11 +1,11 @@
 <template>
   <div class="main-container">
     <!-- Banner部分 -->
-    <div style="height: 55px; background-color: black; width: 100%; border-bottom: 1px solid #e8e8e8; jus">
+    <div style="height: 55px; background-color: #4992BA; width: 100%; border-bottom: 1px solid #e8e8e8; jus">
       <div style="display: flex; align-items: center; height: 100%; justify-content: space-between; ">
-        <span style="font-size: 13px; color: white;">Fountain引擎 1.0</span>
+        <span style="font-size: 13px; color: white;">Venus API Gateway 1.0</span>
         <div>
-          <span style="font-size: 14px; color: white; text-decoration: underline; cursor: pointer;" @click="onLogout()">{{ t('homeMenu.logoutText') }}</span>>
+          <span style="font-size: 14px; color: white; text-decoration: underline; cursor: pointer;" @click="onLogout()">{{ t('homeMenu.logoutText') }}</span>
           <span style="font-size: 14px; color: white; margin-left: 10px; margin-right: 10px;">
             {{ t('login.languageSelect') }}:
           </span>
@@ -53,15 +53,8 @@ import UserLoginApi from "@/api/UserLoginApi.js";
 import { encrypt, decrypt, encrypt_url } from "@/toolkit/secure.js";
 import authorization from "@/toolkit/authorization.js";
 import Welcome from "@/viewer/Welcome.vue";
-import KnowledgeMain from "@/viewer/knowledge/KnowledgeMain.vue";
-import KnowledgeDetail from './knowledge/KnowledgeDetail.vue';
-import AIModelHome from './aimodel/AIModelHome.vue';
-import AIFunctionHome from './aifunction/AIFunctionHome.vue';
-import UserHome from './users/UserHome.vue';
-import UserChatConfig from './users/UserChatConfig.vue';
-import Chat from './chatbot/Chat.vue';
-import SmartPurchase from './agent/smartpurchase/Chat.vue';
-import PicTools from './agent/pictools/PicTools.vue';
+import RouterMgt from "@/viewer/RouterMgt/Router.vue";
+
 import { ref } from 'vue';
 import { message, Modal } from "ant-design-vue"; // 添加 Modal 导入
 
@@ -76,15 +69,8 @@ const activeKeys = ref(['1']);
 // 当前显示的组件
 const currentComponent = ref(Welcome);
 const WelcomComponent = ref(Welcome);
-const KnowledgeMainComponent = ref(KnowledgeMain);
-const KnowledgeDetailComponent = ref(KnowledgeDetail);
-const AIModelHomeComponent = ref(AIModelHome);
-const AIFunctionComponent = ref(AIFunctionHome);
-const UserComponent=ref(UserHome);
-const UserChatConfigComponent=ref(UserChatConfig);
-const ChatComponent=ref(Chat);
-const SmartPurchaseComponent=ref(SmartPurchase);
-const PicToolsComponent=ref(PicTools);
+const RouterMgtComponent = ref(RouterMgt);
+
 const componentProps = ref({});
 const { locale, t } = useI18n();
 const currentLocale = ref(locale.value);
@@ -119,41 +105,9 @@ const menus = ref([
   },
   {
     key: '2',
-    title: t('homeMenu.knowledgeRepoText'),
+    title: t('homeMenu.routerMgtTitleText'),
     items: [
-      { key: '2-1', title: t('homeMenu.knowledgeRepoManageText'), icon: 'ReadOutlined', component: KnowledgeMainComponent },
-    ]
-  },
-  {
-    key: '3',
-    title: t('homeMenu.aiSettingText'),
-    items: [
-      { key: '3-1', title: t('homeMenu.aiModelSettingText'), icon: 'AndroidOutlined', component: AIModelHomeComponent },
-      { key: '3-2', title: t('homeMenu.aiFunctionSettingText'), icon: 'CalculatorOutlined', component: AIFunctionComponent },
-    ]
-  },
-  {
-    key: '4',
-    title: t('homeMenu.userSettingText'),
-    items: [
-      { key: '4-1', title: t('homeMenu.userManagementText'), icon: 'TeamOutlined', component: UserComponent },
-      { key: '4-2', title: t('homeMenu.userChatSettingText'), icon: 'SettingOutlined', component: UserChatConfigComponent },
-    ]
-  },
-  {
-    key: '5',
-    title: t('homeMenu.chatAppText'),
-    items: [
-      { key: '5-1', title: t('homeMenu.ChatWithKnowledge'), icon: 'MessageOutlined', component: ChatComponent },      
-    ]
-  },
-  {
-    key: '6',
-    title: 'AI Agent应用',
-    items: [
-      { key: '6-1', title: '智能导购', icon: 'ShoppingCartOutlined', component: SmartPurchaseComponent },      
-      //{ key: '6-2', title: '图片AI', icon: 'FileImageOutlined', component: PicToolsComponent },   
-
+      { key: '2-1', title: t('homeMenu.routerConfigText'), icon: 'ToolOutlined', component: RouterMgtComponent },
     ]
   }
 ]);
@@ -196,12 +150,10 @@ const onLogout = () => {
 const handleLogout = () => {
   try {
     let token = authorization.getToken();
-    let encryptedToken = encrypt_url(token);
-    let userName = authorization.getUserName();
-    console.log(">>>>>>userName->"+userName)
+    let loginId = authorization.getLoginId();
+    console.log(">>>>>>loginId->"+loginId)
     let payload = {
-      "userName": userName,
-      "token": encryptedToken,
+      "loginId": loginId,
     }
     UserLoginApi.logout(payload).then(res => {
       let channel = route.params.channel || 'default';
