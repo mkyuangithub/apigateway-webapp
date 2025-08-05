@@ -17,7 +17,10 @@ axios.interceptors.request.use(
 		if (authorization.getToken()) {
 			config.headers.token = encrypt_url(authorization.getToken());
 		}
-
+		// 添加 loginId 到请求头
+		if (authorization.getLoginId()) {
+			config.headers.loginId = authorization.getLoginId();
+		}
 		return config;
 	}
 );
@@ -182,7 +185,7 @@ const httpFailure = (res, reject) => {
 				message: '服务不通'
 			});
 		} else {
-			console.log("后台api调用出错了->"+JSON.stringify(res));
+			console.log("后台api调用出错了->" + JSON.stringify(res));
 			reject({
 				code: '9999',
 				success: false,
