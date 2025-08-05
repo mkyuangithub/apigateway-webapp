@@ -52,6 +52,7 @@
                 </template>
             </a-table>
         </div>
+        <PopRouter v-model="popRouterFlag" @refresh-routers="handleRefresh" :routeId="selectRouteId" :editFlag="updateFlag" />
     </div>
 </template>
 <script setup>
@@ -61,10 +62,16 @@ import { encrypt, decrypt, encrypt_url } from "@/toolkit/secure.js";
 import authorization from "@/toolkit/authorization.js";
 import RouteApi from "@/api/RouteApi.js";
 import { Modal } from 'ant-design-vue';
+import PopRouter from '@/viewer/RouterMgt/PopRouter.vue';
 const routeList = ref([]);
 const selectedRowKeys = ref([]);
 const itemId = ref('');
 const searchedUri = ref('');
+//弹出维护路由窗口
+const popRouterFlag = ref(false);
+const selectedRouteId=ref('');
+const updateFlag=ref(1);
+//分页显示用
 const pagination = ref({
     current: 1,
     pageSize: 10,
@@ -87,8 +94,8 @@ const columns = [
     },
     {
         title: '路径',
-        dataIndex: 'type',
-        key: 'type',
+        dataIndex: 'path',
+        key: 'path',
         width: 350,
         align: 'center',  // 添加居中对齐
     }
@@ -119,9 +126,11 @@ const handleEdit = async () => {
 
 const popAddRoutes = async () => {
     try {
-
+        popRouterFlag.value=true;
+        selectedRouteId.value='';
+        updateFlag.value=1;
     } catch (err) {
-        console.error(">>>>>>popAddRoutes error", err);
+        console.error(">>>>>>popRoutes error", err);
     }
 }
 
@@ -140,13 +149,25 @@ const handleSearchUri = async (sarchedUri, pag) => {
             "pageSize": pagination.value.pageSize,
         }
         RouteApi.searchRoutes(payload).then(async res => {
-            routeList.value = res.content.map(item => ({
-                ...item,
-                key: item.id // 确保每条数据都有唯一的key
-            }));
+            routeList.value = res.content.map(item => {
+                // 提取 path pattern
+                let pathPattern = '-';
+                if (item.predicates && item.predicates.length > 0) {
+                    // 查找名称为 Path 的 predicate
+                    const pathPredicate = item.predicates.find(p => p.name === 'Path');
+                    if (pathPredicate && pathPredicate.args && pathPredicate.args.pattern) {
+                        pathPattern = pathPredicate.args.pattern;
+                    }
+                }
+                return {
+                    ...item,
+                    key: item.id, // 确保每条数据都有唯一的key
+                    path: pathPattern // 将提取的 pattern 赋值给 path 属性
+                };
+            });
             pagination.value.total = res.totalElements;
         }).catch(err => {
-            console.error("获取系统当前路由列表失败" , err);
+            console.error("获取系统当前路由列表失败", err);
         });
     } catch (err) {
         console.error(">>>>>>handleSearchUri error", err);
