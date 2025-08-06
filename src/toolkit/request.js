@@ -10,6 +10,13 @@ import { encrypt, encrypt_url, decrypt } from "@/toolkit/secure.js";
 axios.defaults.baseURL = settings.request.baseurl;
 axios.defaults.timeout = 600000;
 
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        console.log('全局捕获到请求错误:', error);
+        return Promise.reject(error);
+    }
+);
 
 axios.interceptors.request.use(
 	config => {
@@ -31,6 +38,7 @@ let lastErrorTime = 0;
 const ERROR_COOLDOWN = 2000; // 2秒内不重复显示相同错误
 
 const httpSuccess = (res, resolve, reject) => {
+	console.log(">>>>>>有一条后台请成功了 code->"+res.code+" message->"+res.message);
 	//console.log(res)
 	if (res && res.data) {
 		let body = res.data;
@@ -47,7 +55,11 @@ const httpSuccess = (res, resolve, reject) => {
 					//let loginStore = useLoginStore();
 					//loginStore.increment();
 					//return;
-					reject(body.data);
+					reject({
+						code: body.code,
+						message: body.message || '权限错误',
+						data: body.data || {}
+					});
 					return;
 				}
 				if (body.code && body.code == "-1" && body.message == "Missing request header 'ut' for method parameter of type String") {
@@ -59,7 +71,11 @@ const httpSuccess = (res, resolve, reject) => {
 					return;
 				} else {
 					//message.error(body.message || body.desc);
-					reject(body.data);
+					reject({
+						code: body.code,
+						message: body.message || '业务处理失败',
+						data: body.data || {}
+					});
 				}
 			}
 		} catch (e) {
@@ -81,7 +97,21 @@ const httpSuccess = (res, resolve, reject) => {
 }
 
 const httpFailure = (res, reject) => {
-	if (res && res.response) {
+    console.log(">>>>>>httpFailure被调用，错误对象：", res);
+    
+    if (!res) {
+        // 处理res为null或undefined的情况
+        reject({
+            code: 'UNKNOWN',
+            success: false,
+            failure: true,
+            message: '未知错误，请求对象为空'
+        });
+        return;
+    }
+    
+    if (res && res.response) {
+		console.log(">>>>>>有一条后台请求出错了 code->"+res.code+" message->"+res.message);
 		let status = res.response.status;
 		let statusText = res.response.statusText;
 		if (status === 400) {
@@ -185,12 +215,11 @@ const httpFailure = (res, reject) => {
 				message: '服务不通'
 			});
 		} else {
-			console.log("后台api调用出错了->" + JSON.stringify(res));
 			reject({
-				code: '9999',
+				code: res.code,
 				success: false,
 				failure: true,
-				message: '其他异常'
+				message: res.message
 			});
 		}
 	}
@@ -229,7 +258,7 @@ export default class Request {
 				}
 			},
 			async onerror(error) {
-				if (options && options.onError()) {
+				if (options && typeof options.onError === 'function') {
 					options.onError(error);
 				}
 				throw new Error(error);
@@ -265,6 +294,7 @@ export default class Request {
 
 	post(url, params, headers, options) {
 		return new Promise((resolve, reject) => {
+			console.log(`开始发送POST请求到: ${this.prefix + url}`);
 			axios({
 				url: this.prefix + url,
 				data: params,
@@ -272,15 +302,22 @@ export default class Request {
 				headers: headers || {},
 				...(options || {})
 			}).then((res) => {
+				console.log(`POST请求成功: ${this.prefix + url}`, res);
 				if (options && options.responseType === 'blob') {
 					console.log(">>>>>>有blob内容返回");
 					resolve(res.data);
 				} else {
-					// 否则走正常的 JSON 响应处理流程
 					httpSuccess(res, resolve, reject);
 				}
-				//httpSuccess(res, resolve, reject);
 			}).catch((err) => {
+				console.log(`POST请求失败: ${this.prefix + url}`, err);
+				// 确保err不为null
+				if (!err) {
+					err = {
+						code: 'UNKNOWN',
+						message: '未知错误'
+					};
+				}
 				httpFailure(err, reject);
 			});
 		})
@@ -300,7 +337,7 @@ export default class Request {
 					resolve(res.data);
 					return;
 				}
-
+				//console(">>>>>>有一次http请求，后台返回的code->为"+res.code+" message为->"+res.message);
 				let body = res.data;
 				try {
 					if (body && body.hasOwnProperty("code") && (body.code == 0 || body.code == 4001 || body.code === '000000')) {

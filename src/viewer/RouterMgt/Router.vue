@@ -52,7 +52,8 @@
                 </template>
             </a-table>
         </div>
-        <PopRouter v-model="popRouterFlag" @refresh-routers="handleRefresh" :routeId="selectRouteId" :editFlag="updateFlag" />
+        <PopRouter v-model="popRouterFlag" @refresh-routers="handleRefresh" :routeId="selectRouteId"
+            :editFlag="updateFlag" />
     </div>
 </template>
 <script setup>
@@ -69,8 +70,8 @@ const itemId = ref('');
 const searchedUri = ref('');
 //弹出维护路由窗口
 const popRouterFlag = ref(false);
-const selectedRouteId=ref('');
-const updateFlag=ref(1);
+const selectedRouteId = ref('');
+const updateFlag = ref(1);
 //分页显示用
 const pagination = ref({
     current: 1,
@@ -116,9 +117,11 @@ const handleTableChange = (pag) => {
     handleSearchUri(searchedUri, pag.current);
 };
 
-const handleEdit = async () => {
+const handleEdit = async (record) => {
     try {
-
+        popRouterFlag.value = true;
+        selectedRouteId.value = record.id;
+        updateFlag.value = 2;
     } catch (err) {
         console.error(">>>>>>handleEdit error", err);
     }
@@ -126,9 +129,9 @@ const handleEdit = async () => {
 
 const popAddRoutes = async () => {
     try {
-        popRouterFlag.value=true;
-        selectedRouteId.value='';
-        updateFlag.value=1;
+        popRouterFlag.value = true;
+        selectedRouteId.value = '';
+        updateFlag.value = 1;
     } catch (err) {
         console.error(">>>>>>popRoutes error", err);
     }
