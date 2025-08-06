@@ -1,36 +1,36 @@
 <template>
     <a-modal :visible="modelValue" :title="titleDescr" :width="'90%'" :style="{ top: '0%' }" @cancel="handleCancel"
         cancelText="关闭">
-        <div>
+        <div style="border: 1px solid #4992BA; height: 300px;">
             <div
-                style="height: 100%; width: 100%; font-size: 13px; color: #595959; align-items: center; margin-top: 10px; display: flex;">
+                style="width: 100%; font-size: 13px; color: #595959; align-items: center; margin-top: 10px; display: flex; margin-left:20px;">
                 <div style="font-size: 13px; color:#595959; margin-top: 10px; width: 20%">
                     Service Id(必输，全局唯一):
                 </div>
                 <div
-                    style="font-size: 13px; color:#595959; margin-top: 10px; display: flex; align-items: center; width: 80%">
+                    style="font-size: 13px; color:#595959; margin-top: 10px; display: flex; align-items: center; width: 70%">
                     <a-input v-model:value="serviceId" placeholder="必输: 手工添加唯一值" :class="custom - lable - textbox"
                         style="height: 24px; width: 100%; margin-left: 5px;" />
                 </div>
             </div>
             <div
-                style="height: 100%; width: 100%; font-size: 13px; color: #595959; align-items: center; margin-top: 10px; display: flex;">
+                style="width: 100%; font-size: 13px; color: #595959; align-items: center; margin-top: 10px; display: flex; margin-left:20px;">
                 <div style="font-size: 13px; color:#595959; margin-top: 10px; width: 20%">
                     uri(必输):
                 </div>
                 <div
-                    style="font-size: 13px; color:#595959; margin-top: 10px; display: flex; align-items: center; width: 80%">
+                    style="font-size: 13px; color:#595959; margin-top: 10px; display: flex; align-items: center; width: 70%">
                     <a-input v-model:value="inputUri" placeholder="必输，如: http://localhost:8080"
                         :class="custom - lable - textbox" style="height: 24px; width: 100%; margin-left: 5px;" />
                 </div>
             </div>
             <div
-                style="height: 100%; width: 100%; font-size: 13px; color: #595959; align-items: center; margin-top: 10px; display: flex;">
+                style="width: 100%; font-size: 13px; color: #595959; align-items: center; margin-top: 10px; display: flex; margin-left:20px;">
                 <div style="font-size: 13px; color:#595959; margin-top: 10px; width: 20%">
                     路径(必输):
                 </div>
                 <div
-                    style="font-size: 13px; color:#595959; margin-top: 10px; display: flex; align-items: center; width: 80%">
+                    style="font-size: 13px; color:#595959; margin-top: 10px; display: flex; align-items: center; width: 70%">
                     <a-input v-model:value="routePath" placeholder="必输，如: /api/path/action.do"
                         :class="custom - lable - textbox" style="height: 24px; width: 100%; margin-left: 5px;" />
                 </div>
