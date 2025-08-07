@@ -39,12 +39,22 @@
             </div>
         </div>
         <!-- 以分页表格列出数据区域-->
-        <div style="margin-top: 10px;">
+        <div style="margin-top: 20px;">
+            <div style="display: flex; justify-content: flex-end; width: 100%; margin-bottom: 10px;">
+                <a-button type="primary" size="small"
+                    style="margin-right: 8px; background-color: red;  color: white;"
+                    @click="handleDelete()">
+                    <template #icon>
+                        <RestOutlined />
+                    </template>
+                    删除
+                </a-button>
+            </div>
             <a-table :columns="columns" :data-source="routeList" :pagination="pagination" :row-selection="{
                 selectedRowKeys: selectedRowKeys,
                 onChange: onSelectChange,
                 type: 'checkbox'  // 明确指定checkbox类型
-            }" :row-class-name="getRowClassName" style="border: 1px solid #4992BA;" @change="handleTableChange">
+            }" style="border: 1px solid #4992BA;" @change="handleTableChange">
                 <template #bodyCell="{ column, record }">
                     <template v-if="column.dataIndex === 'uri'">
                         <a @click="handleEdit(record)" style="text-decoration: underline;">{{ record.uri }}</a>
@@ -52,12 +62,12 @@
                 </template>
             </a-table>
         </div>
-        <PopRouter v-model="popRouterFlag" @refresh-routers="handleRefresh" :routeId="selectRouteId"
+        <PopRouter v-model="popRouterFlag" @refresh-routers="handleRefresh" :routeId="selectedRouteId"
             :editFlag="updateFlag" />
     </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, h } from 'vue';
 import { message } from "ant-design-vue";
 import { encrypt, decrypt, encrypt_url } from "@/toolkit/secure.js";
 import authorization from "@/toolkit/authorization.js";
@@ -99,13 +109,32 @@ const columns = [
         key: 'path',
         width: 350,
         align: 'center',  // 添加居中对齐
+    },
+    {
+        title: '过滤器',
+        dataIndex: 'filters',
+        key: 'filters',
+        width: 350,
+        align: 'center',
+        customRender: ({ text }) => {
+            if (!text || text.length === 0) return '-';
+            // 格式化JSON以便更好地显示
+            const formattedJson = JSON.stringify(text, null, 2);
+            return h('pre', {
+                style: {
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    margin: '0',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    maxHeight: '150px',
+                    overflow: 'auto'
+                }
+            }, formattedJson);
+        }
     }
 ];
-// 修改行类名判断逻辑
-const getRowClassName = (routes, index) => {
-    const baseClass = index % 2 === 0 ? 'even-row' : 'odd-row';
-    return selectedRowKeys.value.includes(routes.id) ? `${baseClass} selected-row` : baseClass;
-};
+
 
 // 选择回调函数，添加key字段判断
 const onSelectChange = (selectedKeys, selectedRows) => {
@@ -134,6 +163,37 @@ const popAddRoutes = async () => {
         updateFlag.value = 1;
     } catch (err) {
         console.error(">>>>>>popRoutes error", err);
+    }
+}
+const handleDelete = async () => {
+    try {
+        if (selectedRowKeys.value.length === 0) {
+            message.warning('请至少选择一条记录');
+            return;
+        }
+        Modal.confirm({
+            title: '确认删除',
+            content: '删除当前选中的路由会造成功能上的影响，请充分确认所选路由没有被用在相关的系统对接上！',
+            okText: '确定删除',
+            cancelText: '取消删除',
+            async onOk() {
+                try {
+                    let payload = {
+                        "ids": selectedRowKeys.value,
+                    }
+                    await RouteApi.delete(payload);
+                    message.success("删除成功");
+                } catch (err) {
+                    message.error("删除失败");
+                    console.error(">>>>>>删除失败->" + err);
+                } finally {
+                    // 无论成功还是失败都会执行
+                    handleRefresh();
+                }
+            }
+        });
+    } catch (err) {
+        console.error(">>>>>>deleteRoute error: ", err);
     }
 }
 
@@ -180,3 +240,25 @@ onMounted(() => {
     handleSearchUri('', 1);
 });
 </script>
+
+<style scoped>
+/* 使用深度选择器覆盖ant-design表格选中行的背景色 */
+:deep(.ant-table-tbody > tr.ant-table-row-selected > td) {
+    background-color: inherit !important;
+}
+
+/* 保持鼠标悬停效果 */
+:deep(.ant-table-tbody > tr.ant-table-row-selected:hover > td) {
+    background-color: #fafafa !important;
+}
+
+/* 偶数行背景色 */
+:deep(.ant-table-tbody > tr:nth-child(even) > td) {
+    background-color: #fafafa;
+}
+
+/* 奇数行背景色 */
+:deep(.ant-table-tbody > tr:nth-child(odd) > td) {
+    background-color: #ffffff;
+}
+</style>

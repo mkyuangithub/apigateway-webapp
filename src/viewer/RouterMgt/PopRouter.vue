@@ -10,7 +10,7 @@
                 <div
                     style="font-size: 13px; color:#595959; margin-top: 10px; display: flex; align-items: center; width: 70%">
                     <a-input v-model:value="serviceId" placeholder="必输: 手工添加唯一值" :class="custom - lable - textbox"
-                        style="height: 24px; width: 100%; margin-left: 5px;" />
+                        style="height: 24px; width: 100%; margin-left: 5px;" :disabled="updateFlag === 2" />
                 </div>
             </div>
             <div
@@ -93,6 +93,50 @@ const handleCancel = () => {
     emit('refresh-routers');
 };
 
+const handleLoadRoute = () => {
+    try {
+        let payload = {
+            routeId: serviceId.value
+        }
+        RouteApi.getRouteById(payload).then(async res => {
+            console.log(">>>>>>得到后台数据->" + JSON.stringify(res));
+            if (res) {
+                const routeData = res;
+                inputUri.value = routeData.uri || '';
+
+                // 获取路径谓词
+                if (routeData.predicates && routeData.predicates.length > 0) {
+                    const pathPredicate = routeData.predicates.find(p => p.name === 'Path');
+                    if (pathPredicate && pathPredicate.args && pathPredicate.args.pattern) {
+                        routePath.value = pathPredicate.args.pattern;
+                    }
+                }
+
+                // 检查是否有 StripPrefix 过滤器
+                if (routeData.filters && routeData.filters.length > 0) {
+                    const stripPrefixFilter = routeData.filters.find(f => f.name === 'StripPrefix');
+                    if (stripPrefixFilter) {
+                        stripPrefixEnabled.value = true;
+                        if (stripPrefixFilter.args && stripPrefixFilter.args.parts) {
+                            stripPrefixArgValue.value = stripPrefixFilter.args.parts;
+                        }
+                    } else {
+                        stripPrefixEnabled.value = false;
+                    }
+                } else {
+                    stripPrefixEnabled.value = false;
+                }
+            }
+        }).catch(err => {
+            console.error("加载路由byId失败" + JSON.stringify(err));
+            let errorMsg = err && err.message ? err.message : '未知错误';
+            message.error(`加载路由byId失败: ${errorMsg}`);
+        });
+    } catch (err) {
+
+    }
+}
+
 const handleSubmit = () => {
     if (!serviceId.value || serviceId.value.trim() === '' || !routePath.value || routePath.value.trim() === '' || !inputUri.value || inputUri.value.trim() === '') {
         message.error('service id、uri以及路径值必输才能提交');
@@ -121,7 +165,7 @@ const handleSubmit = () => {
             ],
             "order": 0
         }
-                // 如果启用了前缀过滤器，则添加到filters中
+        // 如果启用了前缀过滤器，则添加到filters中
         if (stripPrefixEnabled.value) {
             payload.filters.push({
                 "name": "StripPrefix",
@@ -130,17 +174,28 @@ const handleSubmit = () => {
                 }
             });
         }
-        RouteApi.createRoute(payload).then(async res => {
-            message.success('路由创建成功');
-        }).catch(err => {
-            console.error("新增路由列表失败" + JSON.stringify(err));
-            let errorMsg = err && err.message ? err.message : '未知错误';
-            message.error(`路由创建失败: ${errorMsg}`);
-        });
+        console.log(">>>>>>点击提交动作，当前updateFlag->"+updateFlag);
+        if (updateFlag.value === 1) {
+            RouteApi.createRoute(payload).then(async res => {
+                message.success('路由创建成功');
+            }).catch(err => {
+                console.error("新增路由列表失败" + JSON.stringify(err));
+                let errorMsg = err && err.message ? err.message : '未知错误';
+                message.error(`路由创建失败: ${errorMsg}`);
+            });
+        }else if(updateFlag.value===2){
+             RouteApi.updateRoute(payload).then(async res => {
+                message.success('路由更新成功');
+            }).catch(err => {
+                console.error("更新路由列表失败" + JSON.stringify(err));
+                let errorMsg = err && err.message ? err.message : '未知错误';
+                message.error(`更新路由失败: ${errorMsg}`);
+            });
+        }
     } catch (err) {
         console.error(">>>>>>handleSubmit error", err);
-    }finally{
-            emit('refresh-routers');
+    } finally {
+        emit('refresh-routers');
     }
 }
 
@@ -150,16 +205,13 @@ watch(
         if (newModelValue) {  // 当模态框显示时
             serviceId.value = props.routeId;
             updateFlag.value = props.editFlag;
+            console.log(">>>>>>当前正在编辑的serviceId为->" + serviceId.value);
             if (updateFlag.value === 1) {
                 titleDescr.value = '路由管理新增界面'
             } else if (updateFlag.value === 2) {
-                titleDescr.value = '路由管理编辑界面'
+                titleDescr.value = '路由管理编辑界面';
+                handleLoadRoute();
             }
-        } else {
-            // 模态框关闭时清空数据
-            serviceId.value = '';
-            updateFlag.value = 1;
-            titleDescr.value = '路由管理新增界面'
         }
         console.log(">>>>>>current serviceId->" + props.routeId + " and updateFlag->" + props.editFlag);
     },
