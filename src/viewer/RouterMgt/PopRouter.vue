@@ -87,7 +87,7 @@ const handleSubmit = () => {
         // 构建符合后端 GatewayRouteDefinition 的数据结构
         let payload = {
             "id": serviceId.value,
-            "uri": `lb://${inputUri.value}`,
+            "uri": inputUri.value,
             "predicates": [
                 {
                     "name": "Path",
@@ -97,12 +97,12 @@ const handleSubmit = () => {
                 }
             ],
             "filters": [
-                {
-                    "name": "StripPrefix",
-                    "args": {
-                        "parts": "1"
-                    }
-                }
+                //{
+                //    "name": "StripPrefix",
+                //    "args": {
+                //        "parts": "1"
+                //    }
+               // }
             ],
             "order": 0
         }
