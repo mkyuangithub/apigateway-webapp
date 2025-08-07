@@ -35,6 +35,19 @@
                         :class="custom - lable - textbox" style="height: 24px; width: 100%; margin-left: 5px;" />
                 </div>
             </div>
+            <div
+                style="width: 100%; font-size: 13px; color: #595959; align-items: center; margin-top: 10px; display: flex; margin-left:20px;">
+                <div style="font-size: 13px; color:#595959; margin-top: 10px; width: 20%">
+                    前缀过滤器(可选):
+                </div>
+                <div
+                    style="font-size: 13px; color:#595959; margin-top: 10px; display: flex; align-items: center; width: 70%">
+                    <a-checkbox v-model:checked="stripPrefixEnabled" style="margin-right: 10px;"></a-checkbox>
+                    <a-input v-model:value="stripPrefixArgValue" placeholder="可输入值：1，2，3"
+                        :disabled="!stripPrefixEnabled" :class="custom - lable - textbox"
+                        style="height: 24px; width: 100%; margin-left: 5px;" />
+                </div>
+            </div>
         </div>
         <template #footer>
             <a-button @click="handleCancel">关闭</a-button>
@@ -72,10 +85,12 @@ const routePath = ref('');
 const inputUri = ref('');
 const updateFlag = ref(1);
 const titleDescr = ref('路由管理维护界面');
+const stripPrefixEnabled = ref(false);
+const stripPrefixArgValue = ref(1);
 
 const handleCancel = () => {
     emit('update:modelValue', false);
-    emit('handleRefresh');
+    emit('refresh-routers');
 };
 
 const handleSubmit = () => {
@@ -102,9 +117,18 @@ const handleSubmit = () => {
                 //    "args": {
                 //        "parts": "1"
                 //    }
-               // }
+                // }
             ],
             "order": 0
+        }
+                // 如果启用了前缀过滤器，则添加到filters中
+        if (stripPrefixEnabled.value) {
+            payload.filters.push({
+                "name": "StripPrefix",
+                "args": {
+                    "parts": stripPrefixArgValue.value.toString()
+                }
+            });
         }
         RouteApi.createRoute(payload).then(async res => {
             message.success('路由创建成功');
@@ -115,6 +139,8 @@ const handleSubmit = () => {
         });
     } catch (err) {
         console.error(">>>>>>handleSubmit error", err);
+    }finally{
+            emit('refresh-routers');
     }
 }
 
