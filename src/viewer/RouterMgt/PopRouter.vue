@@ -48,6 +48,28 @@
                         style="height: 24px; width: 100%; margin-left: 5px;" />
                 </div>
             </div>
+            <div
+                style="width: 100%; font-size: 13px; color: #595959; align-items: center; margin-top: 10px; display: flex; margin-left:20px;">
+                <div style="font-size: 13px; color:#595959; margin-top: 10px; width: 20%">
+                    connect timeout时间(毫秒):
+                </div>
+                <div
+                    style="font-size: 13px; color:#595959; margin-top: 10px; display: flex; align-items: center; width: 70%">
+                    <a-input v-model:value="connectTimeout" placeholder="5000" :class="custom - lable - textbox"
+                        style="height: 24px; width: 100%; margin-left: 5px;" />
+                </div>
+            </div>
+            <div
+                style="width: 100%; font-size: 13px; color: #595959; align-items: center; margin-top: 10px; display: flex; margin-left:20px;">
+                <div style="font-size: 13px; color:#595959; margin-top: 10px; width: 20%">
+                    response timeout时间(毫秒):
+                </div>
+                <div
+                    style="font-size: 13px; color:#595959; margin-top: 10px; display: flex; align-items: center; width: 70%">
+                    <a-input v-model:value="responseTimeout" placeholder="15000" :class="custom - lable - textbox"
+                        style="height: 24px; width: 100%; margin-left: 5px;" />
+                </div>
+            </div>
         </div>
         <template #footer>
             <a-button @click="handleCancel">关闭</a-button>
@@ -87,7 +109,8 @@ const updateFlag = ref(1);
 const titleDescr = ref('路由管理维护界面');
 const stripPrefixEnabled = ref(false);
 const stripPrefixArgValue = ref(1);
-
+const responseTimeout = ref(15000);
+const connectTimeout = ref(5000);
 const handleCancel = () => {
     emit('update:modelValue', false);
     emit('refresh-routers');
@@ -111,7 +134,11 @@ const handleLoadRoute = () => {
                         routePath.value = pathPredicate.args.pattern;
                     }
                 }
-
+                // 设置超时值，如果存在
+                if (routeData.metadata) {
+                    responseTimeout.value = routeData.metadata['response-timeout'] || 15000;
+                    connectTimeout.value = routeData.metadata['connect-timeout'] || 5000;
+                }
                 // 检查是否有 StripPrefix 过滤器
                 if (routeData.filters && routeData.filters.length > 0) {
                     const stripPrefixFilter = routeData.filters.find(f => f.name === 'StripPrefix');
@@ -133,7 +160,7 @@ const handleLoadRoute = () => {
             message.error(`加载路由byId失败: ${errorMsg}`);
         });
     } catch (err) {
-
+        console.error(">>>>>>handleLoadRoute出错",err);
     }
 }
 
@@ -163,7 +190,11 @@ const handleSubmit = () => {
                 //    }
                 // }
             ],
-            "order": 0
+            "order": 0,
+            "metadata": {
+                "response-timeout": responseTimeout.value ? parseInt(responseTimeout.value) : 15000,  // 默认15秒
+                "connect-timeout": connectTimeout.value ? parseInt(connectTimeout.value) : 5000      // 默认5秒
+            }
         }
         // 如果启用了前缀过滤器，则添加到filters中
         if (stripPrefixEnabled.value) {
@@ -174,7 +205,7 @@ const handleSubmit = () => {
                 }
             });
         }
-        console.log(">>>>>>点击提交动作，当前updateFlag->"+updateFlag);
+        console.log(">>>>>>点击提交动作，当前updateFlag->" + updateFlag);
         if (updateFlag.value === 1) {
             RouteApi.createRoute(payload).then(async res => {
                 message.success('路由创建成功');
@@ -183,8 +214,8 @@ const handleSubmit = () => {
                 let errorMsg = err && err.message ? err.message : '未知错误';
                 message.error(`路由创建失败: ${errorMsg}`);
             });
-        }else if(updateFlag.value===2){
-             RouteApi.updateRoute(payload).then(async res => {
+        } else if (updateFlag.value === 2) {
+            RouteApi.updateRoute(payload).then(async res => {
                 message.success('路由更新成功');
             }).catch(err => {
                 console.error("更新路由列表失败" + JSON.stringify(err));

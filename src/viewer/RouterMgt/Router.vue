@@ -41,8 +41,7 @@
         <!-- 以分页表格列出数据区域-->
         <div style="margin-top: 20px;">
             <div style="display: flex; justify-content: flex-end; width: 100%; margin-bottom: 10px;">
-                <a-button type="primary" size="small"
-                    style="margin-right: 8px; background-color: red;  color: white;"
+                <a-button type="primary" size="small" style="margin-right: 8px; background-color: red;  color: white;"
                     @click="handleDelete()">
                     <template #icon>
                         <RestOutlined />
@@ -109,6 +108,20 @@ const columns = [
         key: 'path',
         width: 350,
         align: 'center',  // 添加居中对齐
+    },
+    {
+        title: '连接超时(毫秒)',
+        dataIndex: 'connectTimeout',
+        key: 'connectTimeout',
+        width: 100,
+        align: 'center',
+    },
+    {
+        title: '响应超时(毫秒)',
+        dataIndex: 'responseTimeout',
+        key: 'responseTimeout',
+        width: 100,
+        align: 'center',
     },
     {
         title: '过滤器',
@@ -222,10 +235,20 @@ const handleSearchUri = async (sarchedUri, pag) => {
                         pathPattern = pathPredicate.args.pattern;
                     }
                 }
+                // 提取超时值
+                let responseTimeout = '-';
+                let connectTimeout = '-';
+                if (item.metadata) {
+                    responseTimeout = item.metadata['response-timeout'] || '-';
+                    connectTimeout = item.metadata['connect-timeout'] || '-';
+                }
+
                 return {
                     ...item,
                     key: item.id, // 确保每条数据都有唯一的key
-                    path: pathPattern // 将提取的 pattern 赋值给 path 属性
+                    path: pathPattern, // 将提取的 pattern 赋值给 path 属性
+                    responseTimeout: responseTimeout, // 添加响应超时
+                    connectTimeout: connectTimeout // 添加连接超时
                 };
             });
             pagination.value.total = res.totalElements;
